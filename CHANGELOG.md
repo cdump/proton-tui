@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0 (2026-01-13)
+
+
+### Miscellaneous Chores
+
+* force release 0.1.0 ([cfda86f](https://github.com/cdump/proton-tui/commit/cfda86f2607650909ccb2c0f349df9caced398e7))
+
 ## [0.1.1](https://github.com/cdump/proton-tui/compare/v0.1.0...v0.1.1) (2026-01-13)
 
 
