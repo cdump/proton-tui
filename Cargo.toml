@@ -1,0 +1,28 @@
+[package]
+name = "proton-tui"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "A modern TUI client for ProtonVPN"
+repository = "https://github.com/cdump/proton-tui"
+license = "MIT"
+keywords = ["protonvpn", "vpn", "wireguard", "tui", "terminal"]
+categories = ["command-line-utilities", "network-programming"]
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.22"
+crossterm = "0.27"
+dirs = "5.0"
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+rand = "0.8"
+ratatui = "0.26"
+reqwest = { version = "0.12", features = ["json", "cookies"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+tokio = { version = "1", features = ["full"] }
+
+# SRP authentication
+num-bigint = "0.4"
+bcrypt = "0.17"
