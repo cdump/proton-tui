@@ -155,10 +155,8 @@ async fn handle_normal_mode_key(app: &mut App, key: KeyEvent) -> io::Result<Loop
         KeyCode::Char('i') => {
             app.toggle_group_by_entry_ip();
         }
-        KeyCode::Tab => {
-            if app.split_view {
-                app.split_switch_focus();
-            }
+        KeyCode::Tab if app.split_view => {
+            app.split_switch_focus();
         }
         KeyCode::Char('s') => {
             if app.split_view {
@@ -270,10 +268,8 @@ async fn handle_normal_mode_key(app: &mut App, key: KeyEvent) -> io::Result<Loop
                 app.connect_to_selected().await;
             }
         }
-        KeyCode::Char(' ') => {
-            if !app.split_view {
-                app.toggle_current_selection();
-            }
+        KeyCode::Char(' ') if !app.split_view => {
+            app.toggle_current_selection();
         }
         KeyCode::Esc => {
             if app.split_view {
@@ -302,26 +298,20 @@ async fn handle_search_mode_key(app: &mut App, key: KeyEvent) -> io::Result<Loop
         KeyCode::Enter | KeyCode::Esc => {
             app.input_mode = InputMode::Normal;
         }
-        KeyCode::Backspace => {
-            if app.search_cursor_position > 0 {
-                app.search_query.remove(app.search_cursor_position - 1);
-                app.search_cursor_position -= 1;
-                if app.split_view {
-                    app.update_split_view_for_search();
-                } else {
-                    app.update_display_list();
-                }
+        KeyCode::Backspace if app.search_cursor_position > 0 => {
+            app.search_query.remove(app.search_cursor_position - 1);
+            app.search_cursor_position -= 1;
+            if app.split_view {
+                app.update_split_view_for_search();
+            } else {
+                app.update_display_list();
             }
         }
-        KeyCode::Left => {
-            if app.search_cursor_position > 0 {
-                app.search_cursor_position -= 1;
-            }
+        KeyCode::Left if app.search_cursor_position > 0 => {
+            app.search_cursor_position -= 1;
         }
-        KeyCode::Right => {
-            if app.search_cursor_position < app.search_query.len() {
-                app.search_cursor_position += 1;
-            }
+        KeyCode::Right if app.search_cursor_position < app.search_query.len() => {
+            app.search_cursor_position += 1;
         }
         KeyCode::Char('a') if key.modifiers.contains(event::KeyModifiers::CONTROL) => {
             app.search_cursor_position = 0;
@@ -346,28 +336,29 @@ async fn handle_search_mode_key(app: &mut App, key: KeyEvent) -> io::Result<Loop
                 app.update_display_list();
             }
         }
-        KeyCode::Char('w') if key.modifiers.contains(event::KeyModifiers::CONTROL) => {
-            if app.search_cursor_position > 0 {
-                let mut start_index = app.search_cursor_position;
-                let chars: Vec<char> = app.search_query.chars().collect();
+        KeyCode::Char('w')
+            if key.modifiers.contains(event::KeyModifiers::CONTROL)
+                && app.search_cursor_position > 0 =>
+        {
+            let mut start_index = app.search_cursor_position;
+            let chars: Vec<char> = app.search_query.chars().collect();
 
-                // Skip trailing spaces if any
-                while start_index > 0 && chars[start_index - 1].is_whitespace() {
-                    start_index -= 1;
-                }
-                // Skip non-spaces (the word)
-                while start_index > 0 && !chars[start_index - 1].is_whitespace() {
-                    start_index -= 1;
-                }
+            // Skip trailing spaces if any
+            while start_index > 0 && chars[start_index - 1].is_whitespace() {
+                start_index -= 1;
+            }
+            // Skip non-spaces (the word)
+            while start_index > 0 && !chars[start_index - 1].is_whitespace() {
+                start_index -= 1;
+            }
 
-                app.search_query
-                    .drain(start_index..app.search_cursor_position);
-                app.search_cursor_position = start_index;
-                if app.split_view {
-                    app.update_split_view_for_search();
-                } else {
-                    app.update_display_list();
-                }
+            app.search_query
+                .drain(start_index..app.search_cursor_position);
+            app.search_cursor_position = start_index;
+            if app.split_view {
+                app.update_split_view_for_search();
+            } else {
+                app.update_display_list();
             }
         }
         KeyCode::Char(c)
