@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.0](https://github.com/cdump/proton-tui/compare/v0.2.0...v0.3.0) (2026-05-25)
+
+
+### Features
+
+* add configuration system and persist split view and group by ip preferences ([7771645](https://github.com/cdump/proton-tui/commit/7771645d006b17acedc3e578dfef74123323eb1a))
+
+
+### Bug Fixes
+
+* **auth:** keep refreshed client after relogin ([f16967a](https://github.com/cdump/proton-tui/commit/f16967a527c190498d9a5d5bf9960c56f450438a))
+* **connection:** avoid deleting scoped vpn certificates ([97afe06](https://github.com/cdump/proton-tui/commit/97afe060eca548da8381ebecf31999da8ba02c40))
+
+
+### Performance Improvements
+
+* **app:** optimize search by pre-computing lowercase strings ([1eda8da](https://github.com/cdump/proton-tui/commit/1eda8daee4d795b55653a3a9cb4f978fa5842ef5))
+
+
+### Miscellaneous Chores
+
+* **release:** force release-please update ([fd2d7ce](https://github.com/cdump/proton-tui/commit/fd2d7ce503f8902e3f73959b63da9912627f16f0))
+
 ## [0.2.0](https://github.com/cdump/proton-tui/compare/v0.1.0...v0.2.0) (2026-01-14)
 
 
