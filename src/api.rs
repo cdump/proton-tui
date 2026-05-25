@@ -13,6 +13,11 @@ pub struct ProtonClient {
     client: Client,
 }
 
+pub enum CertificateMode {
+    Ephemeral,
+    Persistent,
+}
+
 impl ProtonClient {
     pub fn new(uid: String, access_token: String) -> Self {
         let mut headers = header::HeaderMap::new();
@@ -51,6 +56,7 @@ impl ProtonClient {
         pub_pem: &str,
         server: &LogicalServer,
         device_name: &str,
+        mode: CertificateMode,
     ) -> Result<serde_json::Value> {
         let url = format!("{}/vpn/v1/certificate", API_BASE);
 
@@ -61,10 +67,8 @@ impl ProtonClient {
         }
         let instance = &server.servers[0];
 
-        let body = json!({
+        let mut body = json!({
            "ClientPublicKey": pub_pem,
-           "Mode": "persistent",
-           "DeviceName": device_name,
            "Features": {
                "peerName": server.name,
                "peerIp": instance.entry_ip,
@@ -77,6 +81,16 @@ impl ProtonClient {
                "NetShieldLevel": 0
            }
         });
+
+        match mode {
+            CertificateMode::Ephemeral => {
+                body["Duration"] = json!("1440 min");
+            }
+            CertificateMode::Persistent => {
+                body["Mode"] = json!("persistent");
+                body["DeviceName"] = json!(device_name);
+            }
+        }
 
         let resp = self
             .client
@@ -93,30 +107,5 @@ impl ProtonClient {
 
         let json: serde_json::Value = resp.json().await?;
         Ok(json)
-    }
-
-    pub async fn delete_config(&self, config_id: &str) -> Result<()> {
-        let url = format!("{}/vpn/v1/certificate", API_BASE);
-        let body = json!({
-            "SerialNumber": config_id
-        });
-
-        let resp = self
-            .client
-            .delete(&url)
-            .header("Content-Type", "application/json")
-            .json(&body)
-            .send()
-            .await?;
-
-        if resp.status().is_success() {
-            return Ok(());
-        }
-
-        let response_body = resp.text().await.unwrap_or_default();
-        Err(anyhow::anyhow!(
-            "Failed to delete certificate: {}",
-            response_body
-        ))
     }
 }

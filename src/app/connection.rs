@@ -8,6 +8,7 @@ use std::{env, fs, io, path::PathBuf, time::Instant};
 use tokio::process::Command;
 
 use super::{App, ConnectionStatus, DisplayItem};
+use crate::api::CertificateMode;
 use crate::wireguard;
 
 pub enum ConfigTarget {
@@ -117,16 +118,6 @@ impl App {
                     self.log("Disconnected.".to_string());
                     self.connection_status = None;
                     self.show_connection_popup = false;
-
-                    let id_opt = self.current_config_id.clone();
-                    if let Some(id) = id_opt {
-                        self.log(format!("Removing config {} from server...", id));
-                        match self.client.delete_config(&id).await {
-                            Ok(_) => self.log("Configuration removed from server.".to_string()),
-                            Err(e) => self.log(format!("Server-side cleanup failed: {}", e)),
-                        }
-                    }
-                    self.current_config_id = None;
                 } else {
                     self.log("Failed to stop WireGuard.".to_string());
                 }
@@ -152,16 +143,16 @@ impl App {
 
             // 2. Register Config
             let device_name = format!("proton-tui-{}", server.name);
+            let certificate_mode = match target {
+                ConfigTarget::Runtime => CertificateMode::Ephemeral,
+                ConfigTarget::Saved => CertificateMode::Persistent,
+            };
             match self
                 .client
-                .register_config(&pub_pem, &server, &device_name)
+                .register_config(&pub_pem, &server, &device_name, certificate_mode)
                 .await
             {
-                Ok(json) => {
-                    if let Some(id_str) = json["SerialNumber"].as_str() {
-                        self.current_config_id = Some(id_str.to_string());
-                    }
-
+                Ok(_) => {
                     // 3. Generate Config File
                     if server.servers.is_empty() {
                         self.log("Error: No physical servers found.".to_string());

@@ -37,7 +37,6 @@ pub struct App {
     pub connection_status: Option<ConnectionStatus>,
     pub show_connection_popup: bool,
     pub show_help_popup: bool,
-    pub current_config_id: Option<String>,
     // Split view state
     pub split_view: bool,
     pub split_focus: SplitFocus,
@@ -116,7 +115,6 @@ impl App {
             connection_status: None,
             show_connection_popup: false,
             show_help_popup: false,
-            current_config_id: None,
             // Split view state
             split_view,
             split_focus: SplitFocus::Countries,
