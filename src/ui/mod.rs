@@ -44,7 +44,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             ]
             .as_ref(),
         )
-        .split(frame.size());
+        .split(frame.area());
 
     // --- Search Bar ---
     render_search_bar(frame, app, chunks[0]);
@@ -123,7 +123,7 @@ fn render_search_bar(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(search_bar, area);
 
     if app.input_mode == InputMode::Search {
-        frame.set_cursor(area.x + 3 + app.search_cursor_position as u16, area.y + 1);
+        frame.set_cursor_position((area.x + 3 + app.search_cursor_position as u16, area.y + 1));
     }
 }
 
@@ -601,7 +601,7 @@ fn render_connection_popup(frame: &mut Frame, app: &App) {
         .borders(Borders::ALL)
         .style(Style::default().bg(Color::Black));
 
-    let area = centered_rect(60, 50, frame.size());
+    let area = centered_rect(60, 50, frame.area());
 
     frame.render_widget(Clear, area);
     frame.render_widget(block, area);
@@ -713,7 +713,7 @@ fn render_help_popup(frame: &mut Frame) {
         .style(Style::default().bg(bg_color));
 
     // Center the popup with fixed width
-    let frame_size = frame.size();
+    let frame_size = frame.area();
     let popup_width = popup_width.min(frame_size.width);
     let popup_height = (frame_size.height * 85 / 100).min(frame_size.height);
     let x = (frame_size.width.saturating_sub(popup_width)) / 2;

@@ -13,7 +13,7 @@
 use anyhow::{anyhow, Context, Result};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use num_bigint::BigUint;
-use rand::RngCore;
+use rand::{rngs::SysRng, TryRng};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha512};
 
@@ -194,9 +194,10 @@ impl SrpClient {
         let generator = BigUint::from(SRP_GENERATOR);
 
         // Generate random private ephemeral (256 bits)
-        let mut rng = rand::rngs::OsRng;
         let mut a_bytes = [0u8; 32];
-        rng.fill_bytes(&mut a_bytes);
+        SysRng
+            .try_fill_bytes(&mut a_bytes)
+            .expect("OS random source failed");
         // Ensure MSB is set for consistent bit length
         a_bytes[31] |= 0x80;
         let private_ephemeral = BigUint::from_bytes_le(&a_bytes);

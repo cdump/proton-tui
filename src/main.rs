@@ -132,7 +132,9 @@ fn cleanup_terminal<B: Backend + io::Write>(terminal: &mut Terminal<B>) -> io::R
         LeaveAlternateScreen,
         DisableMouseCapture
     )?;
-    terminal.show_cursor()?;
+    terminal
+        .show_cursor()
+        .map_err(|_| io::Error::other("failed to show cursor"))?;
     Ok(())
 }
 
@@ -484,7 +486,9 @@ async fn main() -> Result<()> {
 async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
         if app.should_redraw {
-            terminal.clear()?;
+            terminal
+                .clear()
+                .map_err(|_| io::Error::other("failed to clear terminal"))?;
             app.should_redraw = false;
         }
 
@@ -493,7 +497,9 @@ async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Re
             app.update_traffic_stats();
         }
 
-        terminal.draw(|f| ui::ui(f, &mut app))?;
+        terminal
+            .draw(|f| ui::ui(f, &mut app))
+            .map_err(|_| io::Error::other("failed to draw app"))?;
 
         if event::poll(std::time::Duration::from_millis(POLL_INTERVAL_MS))? {
             if let Event::Key(key) = event::read()? {

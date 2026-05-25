@@ -1,6 +1,6 @@
 //! TUI-based login screen for Proton authentication.
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use ratatui::{
     backend::Backend,
@@ -140,7 +140,7 @@ fn centered_rect(width: u16, height: u16, r: Rect) -> Rect {
 
 fn render_login(frame: &mut Frame, form: &LoginForm) {
     // Draw background
-    let size = frame.size();
+    let size = frame.area();
     let bg = Block::default().style(Style::default().bg(Color::Black));
     frame.render_widget(bg, size);
 
@@ -245,7 +245,7 @@ fn render_login(frame: &mut Frame, form: &LoginForm) {
         LoginField::Username => (inner[2].x + 2 + form.cursor_position as u16, inner[2].y + 1),
         LoginField::Password => (inner[3].x + 2 + form.cursor_position as u16, inner[3].y + 1),
     };
-    frame.set_cursor(cursor_x, cursor_y);
+    frame.set_cursor_position((cursor_x, cursor_y));
 }
 
 /// Result of the login form
@@ -272,7 +272,9 @@ pub fn run_login_with_status<B: Backend>(
     }
 
     loop {
-        terminal.draw(|f| render_login(f, &form))?;
+        terminal
+            .draw(|f| render_login(f, &form))
+            .map_err(|_| anyhow!("failed to draw login form"))?;
 
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
@@ -335,39 +337,43 @@ pub fn run_login_with_status<B: Backend>(
 pub fn show_authenticating<B: Backend>(terminal: &mut Terminal<B>) -> Result<()> {
     let mut form = LoginForm::new();
     form.set_status("Authenticating... (Esc to cancel)", false);
-    terminal.draw(|f| render_login(f, &form))?;
+    terminal
+        .draw(|f| render_login(f, &form))
+        .map_err(|_| anyhow!("failed to draw authenticating status"))?;
     Ok(())
 }
 
 /// Show a loading screen with a message
 pub fn show_loading<B: Backend>(terminal: &mut Terminal<B>, message: &str) -> Result<()> {
-    terminal.draw(|f| {
-        let size = f.size();
-        let bg = Block::default().style(Style::default().bg(Color::Black));
-        f.render_widget(bg, size);
+    terminal
+        .draw(|f| {
+            let size = f.area();
+            let bg = Block::default().style(Style::default().bg(Color::Black));
+            f.render_widget(bg, size);
 
-        let area = centered_rect(40, 5, size);
-        f.render_widget(Clear, area);
+            let area = centered_rect(40, 5, size);
+            f.render_widget(Clear, area);
 
-        let block = Block::default()
-            .title(" ProtonVPN ")
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::Cyan))
-            .style(Style::default().bg(Color::Black));
+            let block = Block::default()
+                .title(" ProtonVPN ")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan))
+                .style(Style::default().bg(Color::Black));
 
-        let inner = block.inner(area);
-        f.render_widget(block, area);
+            let inner = block.inner(area);
+            f.render_widget(block, area);
 
-        let text = Paragraph::new(vec![
-            Line::from(Span::styled(message, Style::default().fg(Color::Yellow))),
-            Line::from(Span::styled(
-                "Press Esc to cancel",
-                Style::default().fg(Color::DarkGray),
-            )),
-        ])
-        .alignment(ratatui::layout::Alignment::Center);
-        f.render_widget(text, inner);
-    })?;
+            let text = Paragraph::new(vec![
+                Line::from(Span::styled(message, Style::default().fg(Color::Yellow))),
+                Line::from(Span::styled(
+                    "Press Esc to cancel",
+                    Style::default().fg(Color::DarkGray),
+                )),
+            ])
+            .alignment(ratatui::layout::Alignment::Center);
+            f.render_widget(text, inner);
+        })
+        .map_err(|_| anyhow!("failed to draw loading screen"))?;
     Ok(())
 }
 
@@ -377,39 +383,42 @@ pub fn show_error<B: Backend>(terminal: &mut Terminal<B>, error: &str) -> Result
     form.set_status(error, true);
 
     loop {
-        terminal.draw(|f| {
-            render_login(f, &form);
+        terminal
+            .draw(|f| {
+                render_login(f, &form);
 
-            // Override hints to show retry option
-            let size = f.size();
-            let login_area = centered_rect(50, 14, size);
-            let inner = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints([
-                    Constraint::Length(1),
-                    Constraint::Length(1),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(1),
-                    Constraint::Min(0),
-                ])
-                .split(login_area);
+                // Override hints to show retry option
+                let size = f.area();
+                let login_area = centered_rect(50, 14, size);
+                let inner = Layout::default()
+                    .direction(Direction::Vertical)
+                    .margin(1)
+                    .constraints([
+                        Constraint::Length(1),
+                        Constraint::Length(1),
+                        Constraint::Length(3),
+                        Constraint::Length(3),
+                        Constraint::Length(1),
+                        Constraint::Min(0),
+                    ])
+                    .split(login_area);
 
-            let key_style = Style::default().fg(Color::Black).bg(Color::DarkGray);
-            let desc_style = Style::default().fg(Color::Gray);
-            let sep_style = Style::default().fg(Color::DarkGray);
+                let key_style = Style::default().fg(Color::Black).bg(Color::DarkGray);
+                let desc_style = Style::default().fg(Color::Gray);
+                let sep_style = Style::default().fg(Color::DarkGray);
 
-            let hints = Line::from(vec![
-                Span::styled(" Enter ", key_style),
-                Span::styled(" Retry ", desc_style),
-                Span::styled(" | ", sep_style),
-                Span::styled(" Esc ", key_style),
-                Span::styled(" Quit ", desc_style),
-            ]);
-            let hints_para = Paragraph::new(hints).alignment(ratatui::layout::Alignment::Center);
-            f.render_widget(hints_para, inner[5]);
-        })?;
+                let hints = Line::from(vec![
+                    Span::styled(" Enter ", key_style),
+                    Span::styled(" Retry ", desc_style),
+                    Span::styled(" | ", sep_style),
+                    Span::styled(" Esc ", key_style),
+                    Span::styled(" Quit ", desc_style),
+                ]);
+                let hints_para =
+                    Paragraph::new(hints).alignment(ratatui::layout::Alignment::Center);
+                f.render_widget(hints_para, inner[5]);
+            })
+            .map_err(|_| anyhow!("failed to draw error screen"))?;
 
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {

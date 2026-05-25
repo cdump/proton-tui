@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use ed25519_dalek::SigningKey;
-use rand::rngs::OsRng;
+use rand::{rngs::SysRng, TryRng};
 use sha2::{Digest, Sha512};
 
 pub struct KeyPair {
@@ -9,8 +9,12 @@ pub struct KeyPair {
 }
 
 pub fn generate_keypair() -> KeyPair {
-    let mut csprng = OsRng;
-    let signing_key = SigningKey::generate(&mut csprng);
+    let mut private_key = [0u8; 32];
+    SysRng
+        .try_fill_bytes(&mut private_key)
+        .expect("OS random source failed");
+
+    let signing_key = SigningKey::from_bytes(&private_key);
     let verifying_key = signing_key.verifying_key();
 
     KeyPair {

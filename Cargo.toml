@@ -12,18 +12,18 @@ categories = ["command-line-utilities", "network-programming"]
 [dependencies]
 anyhow = "1.0"
 base64 = "0.22"
-crossterm = "0.27"
-dirs = "5.0"
+crossterm = "0.29"
+dirs = "6.0"
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
-rand = "0.8"
-ratatui = "0.26"
-reqwest = { version = "0.12", features = ["json", "cookies"] }
+rand = "0.10"
+ratatui = "0.30"
+reqwest = { version = "0.13", features = ["json", "cookies"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-sha2 = "0.10"
+sha2 = "0.11"
 tokio = { version = "1", features = ["full"] }
 
 # SRP authentication
 num-bigint = "0.4"
-bcrypt = "0.17"
-toml = "0.9.11"
+bcrypt = "0.19"
+toml = "1.1.2"
