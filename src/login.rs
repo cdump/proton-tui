@@ -258,7 +258,18 @@ pub enum LoginResult {
 
 /// Run the login form and return the result
 pub fn run_login<B: Backend>(terminal: &mut Terminal<B>) -> Result<LoginResult> {
+    run_login_with_status(terminal, None)
+}
+
+/// Run the login form with an optional initial status message.
+pub fn run_login_with_status<B: Backend>(
+    terminal: &mut Terminal<B>,
+    initial_status: Option<(&str, bool)>,
+) -> Result<LoginResult> {
     let mut form = LoginForm::new();
+    if let Some((message, is_error)) = initial_status {
+        form.set_status(message, is_error);
+    }
 
     loop {
         terminal.draw(|f| render_login(f, &form))?;

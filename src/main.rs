@@ -24,7 +24,9 @@ mod wireguard;
 use api::ProtonClient;
 use app::{App, ConfigTarget, InputMode, SplitFocus};
 use auth::ProtonAuth;
-use login::{run_login, show_authenticating, show_error, show_loading, LoginResult};
+use login::{
+    run_login, run_login_with_status, show_authenticating, show_error, show_loading, LoginResult,
+};
 use tokens::{load_tokens, save_tokens, StoredTokens};
 
 const POLL_INTERVAL_MS: u64 = 50;
@@ -32,9 +34,22 @@ const CANCEL_POLL_INTERVAL_MS: u64 = 50;
 
 /// Authenticate using TUI login form
 async fn authenticate_tui<B: Backend>(terminal: &mut Terminal<B>) -> Result<Option<StoredTokens>> {
+    authenticate_tui_with_status(terminal, None).await
+}
+
+/// Authenticate using TUI login form with an optional initial status message.
+async fn authenticate_tui_with_status<B: Backend>(
+    terminal: &mut Terminal<B>,
+    initial_status: Option<(&str, bool)>,
+) -> Result<Option<StoredTokens>> {
+    let mut next_status = initial_status;
+
     loop {
         // Show login form
-        let result = run_login(terminal)?;
+        let result = match next_status.take() {
+            Some(status) => run_login_with_status(terminal, Some(status))?,
+            None => run_login(terminal)?,
+        };
 
         match result {
             LoginResult::Cancel => return Ok(None),
@@ -390,7 +405,7 @@ async fn main() -> Result<()> {
         }
     };
 
-    let client = ProtonClient::new(tokens.uid, tokens.access_token);
+    let mut client = ProtonClient::new(tokens.uid, tokens.access_token);
 
     // Prevent Ctrl+C from killing the app (useful when running sudo subprocess)
     tokio::spawn(async move {
@@ -417,23 +432,23 @@ async fn main() -> Result<()> {
                 || err_str.contains("Invalid")
             {
                 tokens::delete_tokens()?;
-                // Show error and offer to retry
-                if show_error(&mut terminal, "Session expired. Press Enter to login again")? {
-                    // Restart auth flow
-                    match authenticate_tui(&mut terminal).await? {
-                        Some(new_tokens) => {
-                            let new_client =
-                                ProtonClient::new(new_tokens.uid, new_tokens.access_token);
-                            new_client.get_logical_servers().await?
-                        }
-                        None => {
-                            cleanup_terminal(&mut terminal)?;
-                            return Ok(());
-                        }
+
+                match authenticate_tui_with_status(
+                    &mut terminal,
+                    Some(("Please login again", false)),
+                )
+                .await?
+                {
+                    Some(new_tokens) => {
+                        let new_client = ProtonClient::new(new_tokens.uid, new_tokens.access_token);
+                        let servers = new_client.get_logical_servers().await?;
+                        client = new_client;
+                        servers
                     }
-                } else {
-                    cleanup_terminal(&mut terminal)?;
-                    return Ok(());
+                    None => {
+                        cleanup_terminal(&mut terminal)?;
+                        return Ok(());
+                    }
                 }
             } else {
                 cleanup_terminal(&mut terminal)?;
