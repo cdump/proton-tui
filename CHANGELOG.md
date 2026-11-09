@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/cdump/proton-tui/compare/v0.3.0...v0.4.0) (2026-11-09)
+
+
+### Features
+
+* cargo update ([23d7e28](https://github.com/cdump/proton-tui/commit/23d7e280833844427b8275772a7c351b325060bb))
+
+
+### Bug Fixes
+
+* **api:** update unsupported api version ([914a256](https://github.com/cdump/proton-tui/commit/914a2569e4517abe701281162fb56ae09c3f15f5))
+
 ## [0.3.0](https://github.com/cdump/proton-tui/compare/v0.2.0...v0.3.0) (2026-05-25)
 
 
