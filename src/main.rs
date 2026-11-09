@@ -17,6 +17,7 @@ mod config;
 mod countries;
 mod login;
 mod models;
+mod proton;
 mod tokens;
 mod ui;
 mod wireguard;

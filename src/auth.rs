@@ -10,6 +10,7 @@
 //! 4. POST /auth - Submit SRP proof, get tokens (UID, AccessToken, RefreshToken)
 //! 5. (Optional) POST /auth/2fa - If 2FA is enabled
 
+use crate::proton::{API_BASE, APP_VERSION, USER_AGENT};
 use anyhow::{anyhow, Context, Result};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use num_bigint::BigUint;
@@ -20,12 +21,6 @@ use sha2::{Digest, Sha512};
 // ============================================================================
 // Constants
 // ============================================================================
-
-/// Proton VPN API base URL
-pub const API_BASE: &str = "https://vpn-api.proton.me";
-
-/// App version string for API requests
-pub const APP_VERSION: &str = "linux-vpn-cli@4.13.1+x86-64";
 
 /// SRP generator (g = 2)
 const SRP_GENERATOR: u32 = 2;
@@ -330,7 +325,7 @@ impl ProtonAuth {
     /// Create a new ProtonAuth client
     pub fn new() -> Result<Self> {
         let http_client = reqwest::Client::builder()
-            .user_agent("ProtonVPN/4.13.1 (Linux; ubuntu/22.04)")
+            .user_agent(USER_AGENT)
             .cookie_store(true)
             .build()
             .context("Failed to create HTTP client")?;

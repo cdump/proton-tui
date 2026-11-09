@@ -1,13 +1,8 @@
 use crate::models::{LogicalServer, LogicalServersResponse};
+use crate::proton::{API_BASE, APP_VERSION, USER_AGENT};
 use anyhow::Result;
 use reqwest::{header, Client};
 use serde_json::json;
-
-/// Proton VPN API base URL
-const API_BASE: &str = "https://vpn-api.proton.me";
-
-/// App version string for API requests
-const APP_VERSION: &str = "linux-vpn-cli@4.13.1+x86-64";
 
 pub struct ProtonClient {
     client: Client,
@@ -33,7 +28,11 @@ impl ProtonClient {
         headers.insert("Authorization", auth_value.parse().unwrap());
 
         Self {
-            client: Client::builder().default_headers(headers).build().unwrap(),
+            client: Client::builder()
+                .default_headers(headers)
+                .user_agent(USER_AGENT)
+                .build()
+                .unwrap(),
         }
     }
 
